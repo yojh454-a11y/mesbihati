@@ -1,13 +1,39 @@
 plugins { id 'com.android.application' }
 
+def releaseStoreFile = System.getenv("MESBIHATI_KEYSTORE_FILE")
+def releaseStorePassword = System.getenv("MESBIHATI_STORE_PASSWORD")
+def releaseKeyAlias = System.getenv("MESBIHATI_KEY_ALIAS")
+def releaseKeyPassword = System.getenv("MESBIHATI_KEY_PASSWORD")
+
 android {
     namespace 'com.mesbihati.app'
     compileSdk 35
+
+    signingConfigs {
+        release {
+            if (releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
     defaultConfig {
-        applicationId 'com.mesbihati.app'
+        applicationId 'com.mesbihati.newapp'
         minSdk 23
         targetSdk 28
-        versionCode 2
-        versionName '1.1'
+        versionCode 1
+        versionName '1.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword) {
+                signingConfig signingConfigs.release
+            }
+        }
     }
 }
