@@ -1,4 +1,4 @@
-name: Build Mesbihati APK
+name: Build Mesbihati Release APK
 on:
   push:
     branches: [ "main" ]
@@ -14,14 +14,32 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Prepare permanent signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.MESBIHATI_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.MESBIHATI_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.MESBIHATI_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.MESBIHATI_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "Missing GitHub Actions signing secrets. Add all four MESBIHATI secrets first."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/mesbihati-release.jks"
+          echo "MESBIHATI_KEYSTORE_FILE=$RUNNER_TEMP/mesbihati-release.jks" >> "$GITHUB_ENV"
+          echo "MESBIHATI_STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "MESBIHATI_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+          echo "MESBIHATI_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
       - name: Install Android SDK packages
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKMANAGER" --licenses
           "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
+      - name: Build signed release APK
+        run: gradle --no-daemon assembleRelease
+      - name: Verify APK signature
+        run: "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Mesbihati-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Mesbihati-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
