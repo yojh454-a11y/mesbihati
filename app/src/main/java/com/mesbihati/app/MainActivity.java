@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
     }
     LinearLayout content;
     void showHome(){
-        stopAuto();base("رفيق ذكرك • يعمل دون إنترنت");
+        base("رفيق ذكرك • يعمل دون إنترنت");
         TextView quote=label("﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾",17,gold);content.addView(quote);
         nameView=label(currentName,22,white);nameView.setBackground(shape(panel,18));content.addView(nameView);
         LinearLayout toggles=row();
